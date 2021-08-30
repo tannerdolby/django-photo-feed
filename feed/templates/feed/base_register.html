@@ -1,0 +1,18 @@
+{% extends "feed/base.html" %}
+{% block title %}Register | Django Photo Feed{% endblock %}
+{% block main %}         
+
+<div class="register-container">
+	<h1>Register</h1>
+	<form method="POST">
+		{% csrf_token %}
+		<label for="id_username">Username:</label><input type="text" name="username" maxlength="150" autofocus="" required="" id="id_username">
+		<label for="id_email">Email:</label><input type="email" name="email" required="" id="id_email">
+		<label for="id_password1">Password:</label><input type="password" name="password1" autocomplete="new-password" required="" id="id_password1">
+		<label for="id_password2">Password confirmation:</label><input type="password" name="password2" autocomplete="new-password" required="" id="id_password2">
+		<button class="btn" type="submit">Register</button>
+	</form>
+	<p>If you already have an account, <a href="{% url 'feed:login' %}">login</a> instead.</p>
+</div>
+
+{% endblock %}

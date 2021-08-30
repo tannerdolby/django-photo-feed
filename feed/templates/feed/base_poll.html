@@ -1,0 +1,29 @@
+{% extends "feed/base.html" %}
+{% load static %}
+{% block title %}Leaderboards | Django Photo Feed{% endblock %}
+{% block  header %}
+<div class="poll-hero">
+<h1 class="hero-h">Liked Leaderboards</h1>
+<p class="hero-p">The table below contains current vote tallies for all images in the feed. This 'main_feed' is populated from the database with hand picked images. Each user has their own collection created in the form of {username}_{id}. If you want to view only your accounts liked collection without community votes, head over to your profile.</p>
+</div>
+{% endblock %}
+{% block main %}
+<table>
+    <thead>
+        <tr>
+            <th>Place</th>
+            <th>Image</th>
+            <th>Likes</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for img in leaderboard %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><a href="{% url 'feed:detail' img.id %}">{{ img.title }}</a></td>
+            <td>{{ img.votes }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

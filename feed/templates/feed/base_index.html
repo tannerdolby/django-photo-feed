@@ -1,0 +1,20 @@
+{% extends "feed/base.html" %}
+{% load static %}
+{% block title %}Home | Django Photo Feed{% endblock %}
+{% block  header %}<h1 class="hero-h">Django Photo Feed</h1>{% endblock %}
+{% block main %}
+<p class="hero-p">Welcome! Browse from the main gallery feed below. Stock images that populate the feed are from <a href="https://pexels.com">Pexels</a>. Click on an image to view more details about it. Add the image to your "liked" colletion by clicking the "like" button. Login to view your profile and corresponding liked collection.</p>
+{% if latest_image_feed %}
+<ul class="image__feed">
+    {% for image in latest_image_feed %}
+    <li>
+    {% with 'feed/images/'|add:image.src as img_src %}
+        <a href="{% url 'feed:detail' image.pk %}">
+            <img src="{% static img_src %}" alt="{{ image.alt }}" loading="lazy" width="400px" height="400px" />
+        </a>
+    {% endwith %}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

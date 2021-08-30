@@ -1,0 +1,23 @@
+{% extends "feed/base.html" %}
+{% load static %}
+{% block title %}{{ image.title }} | Django Photo Feed{% endblock %}
+{% block main %}
+{% with 'feed/images/'|add:image.src as img_src %}
+<img class="detail-img" src="{% static img_src %}" alt="{{ image.alt }}" loading="lazy" width="1024" height="640" />
+{% endwith %}
+<div class="detail-wrap">
+<div class="row">
+<h1>{{ image.title }}</h1>
+<form action="{% url 'feed:like' image.id %}" method="post">
+    {% csrf_token %}
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    <input type="text" style="display: none;" name="option" value="{{ image.id }}">
+    <button class="like-btn" type="submit">Like photo <svg id="color" enable-background="new 0 0 24 24" height="24px" width="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m11.466 22.776c.141.144.333.224.534.224s.393-.08.534-.224l9.594-9.721c4.001-4.053 1.158-11.055-4.532-11.055-3.417 0-4.985 2.511-5.596 2.98-.614-.471-2.172-2.98-5.596-2.98-5.672 0-8.55 6.984-4.531 11.055z" fill="#f44336"/></svg></button>
+</form>
+</div>
+<p>{{ image.alt }}</p>
+<div class="voting">
+<p>Popularity: {{ image.votes }} likes</p>
+</div>
+</div>
+{% endblock %}

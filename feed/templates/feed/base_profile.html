@@ -1,0 +1,46 @@
+{% extends "feed/base.html" %}
+{% load static %}
+{% block title %}{{ user.username }}'s Profile | Django Photo Feed{% endblock %}
+{% block  header %}
+<div class="profile-block">
+    <div class="wrap-profile">
+        <img class="profile-avatar" src="{% static 'feed/svg/user.svg' %}" alt="default user profile picture" />
+        <h1>{{ user.username }}'s Profile</h1>
+        <ul>
+            <li>Account created on: {{ user.date_joined }}</li>
+            <li>Username: {{ user.username }}</li>
+            <li>Email: {{ user.email }}</li>
+            <li>Is Admin: {{ user.is_superuser }}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+{% block main %}
+<div class="profile-container">
+<h2>Liked Collection - {{ likedNum }} photos</h2>
+{% if user.is_authenticated %}
+<ul class="profile-liked">
+    {% for img in liked %}
+    <li>
+        <div>
+            {% with 'feed/images/'|add:img.src as img_src %}
+            <img src="{% static img_src %}" alt="{{ img.alt }}" loading="lazy" width="200px" height="200px" />
+            {% endwith %}
+            <p>{{ img.title }}</p>
+            <p>Liked on {{ img.created_at }}</p>
+            <details>
+            <summary>Options</summary>
+            <form class="remove-form" action="{% url 'feed:unlike' user.id %}" method="post">
+                {% csrf_token %}
+                {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+                <input type="text" style="display: none;" name="image" value="{{ img.id }}">
+                <button class="like-btn" type="submit">Remove</button>
+            </form>
+            </details>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+</div>
+{% endif %}
+{% endblock %}

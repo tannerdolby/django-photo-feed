@@ -1,0 +1,15 @@
+{% extends "feed/base.html" %}
+{% block title %}Login | Django Photo Feed{% endblock %}
+
+{% block main %}      
+<div class="login-container">
+  <h1>Login</h1>
+  <form method="POST">
+    {% csrf_token %}
+    {{ login_form }}
+    <button class="btn" type="submit">Login</button>
+  </form>
+  <p>Don't have an account? <a href="{% url 'feed:register' %}">Create an account</a></p>
+</div>
+
+{% endblock %}
