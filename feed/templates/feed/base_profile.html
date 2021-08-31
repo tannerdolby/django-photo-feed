@@ -23,9 +23,11 @@
     {% for img in liked %}
     <li>
         <div>
+            <a href="{% url 'feed:detail' img.id %}">
             {% with 'feed/images/'|add:img.src as img_src %}
             <img src="{% static img_src %}" alt="{{ img.alt }}" loading="lazy" width="200px" height="200px" />
             {% endwith %}
+            </a>
             <p>{{ img.title }}</p>
             <p>Liked on {{ img.created_at }}</p>
             <details>

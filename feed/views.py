@@ -3,13 +3,14 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 from .models import Collection, Image
-from django import forms
+from django.contrib.auth.models import User
 from django.utils import timezone
+from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .forms import NewUserForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
-from django.contrib.auth.models import User
+
 
 # Setup generic views
 class IndexView(generic.ListView):
@@ -53,11 +54,22 @@ class LeaderboardView(generic.ListView):
         get_all = c.image_set.order_by("-votes")
         return get_all
 
+def getUserAuth(user):
+    userAuth = authenticate(username=user.username, password=user.password)
+    if userAuth is not None:
+        # backend authenticated user
+        return True
+    else:
+        return False
+
 def about(request):
     return render(request, 'feed/base_about.html')
 
 def profile(request, user_id):
     user = get_object_or_404(User, pk=user_id)
+    if getUserAuth(user) == False or user.is_authenticated == False:
+        # raise Http404("You don't have permission to access this page. User is not authenticated")
+        return redirect('feed:login')
 
     try:
         c = Collection.objects.get(name="{u}_{uid}".format(u=user.username, uid=user_id))
@@ -73,7 +85,10 @@ def profile(request, user_id):
 
 def like(request, image_id):
     image = get_object_or_404(Image, pk=image_id)
-    u = User.objects.get(pk=request.user.id)
+    if request.user.is_authenticated == False:
+        return redirect('feed:login')
+
+    u = get_object_or_404(User, pk=request.user.id)
     coll_exists = ""
 
     try:
@@ -102,12 +117,10 @@ def like(request, image_id):
         coll_exists.save()
         selected_choice.votes += 1
         selected_choice.save()
-       
         return HttpResponseRedirect(reverse('feed:profile', args=(u.id,)))
     else:
         selected_choice.votes += 1
         selected_choice.save()
-
         return HttpResponseRedirect(reverse('feed:profile', args=(u.id,)))
     
 

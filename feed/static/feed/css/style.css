@@ -174,7 +174,7 @@ form input + button:hover {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    margin: 5px 0;
+    margin: 10px 0;
 }
 
 .home-logo {
