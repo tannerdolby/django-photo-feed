@@ -16,10 +16,6 @@
 </form>
 </div>
 <p>{{ image.alt }}</p>
-{% if image.votes != 1 %}
-<div class="voting">
-    <p>Popularity: {{ image.votes }} likes</p>
-</div>
-{% endif %}
+<p>Popularity: {{ image.votes }} likes</p>
 </div>
 {% endblock %}

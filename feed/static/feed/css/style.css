@@ -215,8 +215,6 @@ form input + button:hover {
 
 .main-nav ul li:last-child a {
     color: #fff;
-    transform: translateY(0px);
-    will-change: transform;
     padding: 6px 14px;
     background-color: #06020d;
     background-color: #0d041b;

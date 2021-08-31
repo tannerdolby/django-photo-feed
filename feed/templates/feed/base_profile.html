@@ -18,16 +18,17 @@
 {% block main %}
 <div class="profile-container">
 <h2>Liked Collection - {{ likedNum }} photos</h2>
+{% if likedNum == 0 %}
+<a href="{% url 'feed:index' %}">Add images to your collection</a>
+{% endif %}
 {% if user.is_authenticated %}
 <ul class="profile-liked">
     {% for img in liked %}
     <li>
         <div>
-            <a href="{% url 'feed:detail' img.id %}">
             {% with 'feed/images/'|add:img.src as img_src %}
             <img src="{% static img_src %}" alt="{{ img.alt }}" loading="lazy" width="200px" height="200px" />
             {% endwith %}
-            </a>
             <p>{{ img.title }}</p>
             <p>Liked on {{ img.created_at }}</p>
             <details>

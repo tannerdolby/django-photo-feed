@@ -54,23 +54,15 @@ class LeaderboardView(generic.ListView):
         get_all = c.image_set.order_by("-votes")
         return get_all
 
-def getUserAuth(user):
-    userAuth = authenticate(username=user.username, password=user.password)
-    if userAuth is not None:
-        # backend authenticated user
-        return True
-    else:
-        return False
-
 def about(request):
     return render(request, 'feed/base_about.html')
 
 def profile(request, user_id):
     user = get_object_or_404(User, pk=user_id)
-    if getUserAuth(user) == False or user.is_authenticated == False:
+
+    if not request.user.is_authenticated:
         # raise Http404("You don't have permission to access this page. User is not authenticated")
         return redirect('feed:login')
-
     try:
         c = Collection.objects.get(name="{u}_{uid}".format(u=user.username, uid=user_id))
     except Collection.DoesNotExist:
