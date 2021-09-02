@@ -22,4 +22,5 @@ I opted for this data model structure to keep track of each `User` records "like
 Each user can have a relationship with a `Collection` (or many) and multiple different `Image` objects. Allowing for quick tracking of associated User/Image or Collection/Image records.
 
 ## Resources
-[Django docs](https://docs.djangoproject.com/en/3.2/)
+- [Django](https://docs.djangoproject.com/en/3.2/) - Django Documentation
+- [Pexels](https://pexels.com) - Provided all stock images used in this application
