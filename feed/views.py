@@ -7,10 +7,14 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .forms import NewUserForm
+from .forms import NewUserForm, ModelFormWithFileField, ModelFormWithImageField
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
+from django.conf import settings
+import os
+import pandas
 
+cwd = os.getcwd()
 
 # Setup generic views
 class IndexView(generic.ListView):
@@ -20,6 +24,8 @@ class IndexView(generic.ListView):
     def get_queryset(self):
         """Return images from the 'main_feed' collection."""
         i = Image.objects.filter(collection=self.c.id)
+        #ip = Image.objects.get(title='Test Image')
+        #print(ip.data)
         return i[::-1]
 
 # view the image on its own page in more detail
@@ -60,20 +66,35 @@ def about(request):
 def profile(request, user_id):
     user = get_object_or_404(User, pk=user_id)
 
-    if not request.user.is_authenticated:
+    if user.id != request.user.id:
         # raise Http404("You don't have permission to access this page. User is not authenticated")
-        return redirect('feed:login')
+        return redirect('feed:index')
     try:
         c = Collection.objects.get(name="{u}_{uid}".format(u=user.username, uid=user_id))
     except Collection.DoesNotExist:
         c = Collection(name="{u}_{i}".format(u=user.username, i=user.id), created_at=timezone.now())
         c.save()
+
     liked = user.image_set.filter(collection=c.id)
 
     return render(request, 'feed/base_profile.html', {
         'liked': liked[::-1],
-        'likedNum': len(liked)
+        'likedNum': len(liked),
+        'uid': request.user.id
     })
+
+def likeHelper(coll, selected_choice, u):
+    coll.image_set.create(
+        collection=coll,
+        user=u,
+        title=selected_choice.title,
+        alt=selected_choice.alt,
+        src=selected_choice.src or "",
+        created_at=selected_choice.created_at,
+        votes=selected_choice.votes,
+        data=selected_choice.data
+        )
+    coll.save()
 
 def like(request, image_id):
     image = get_object_or_404(Image, pk=image_id)
@@ -86,27 +107,11 @@ def like(request, image_id):
     try:
         selected_choice = Image.objects.get(pk=request.POST['option'])
         coll_exists = Collection.objects.get(name="{u}_{i}".format(u=u.username, i=u.id))
-        coll_exists.image_set.create(collection=coll_exists,
-            user=u,
-            title=selected_choice.title,
-            alt=selected_choice.alt,
-            src=selected_choice.src,
-            created_at=selected_choice.created_at,
-            votes=selected_choice.votes
-            )
-        coll_exists.save()
+        likeHelper(coll_exists, selected_choice, u)
     except (Collection.DoesNotExist, KeyError, Image.DoesNotExist) as e:
         coll_exists = Collection(name="{u}_{i}".format(u=u.username, i=u.id), created_at=timezone.now())
         coll_exists.save()
-        coll_exists.image_set.create(collection=coll_exists,
-            user=u,
-            title=selected_choice.title,
-            alt=selected_choice.alt,
-            src=selected_choice.src,
-            created_at=selected_choice.created_at,
-            votes=selected_choice.votes
-            )
-        coll_exists.save()
+        likeHelper(coll_exists, selected_choice, u)
         selected_choice.votes += 1
         selected_choice.save()
         return HttpResponseRedirect(reverse('feed:profile', args=(u.id,)))
@@ -127,7 +132,7 @@ def register(request):
 			return redirect('feed:index')
 		messages.error(request, "Unsuccessful registration. Invalid information.")
 	form = NewUserForm()
-	return render (request=request, template_name="feed/base_register.html", context={"register_form":form})
+	return render(request=request, template_name="feed/base_register.html", context={"register_form":form})
 
 def login_user(request):
     if request.method == "POST":
@@ -167,8 +172,73 @@ def unlike(request, user_id):
         main_feed = Collection.objects.get(pk=1)
         img = main_feed.image_set.get(title=cimg.title)
         img.votes -= 1
+        if img.votes < 0:
+            img.votes = 0
         img.save()
     except (KeyError, Collection.DoesNotExist, Image.DoesNotExist) as e:
-        print("Collection or Image does not exist? Major error!", e)
+        print("Collection or Image does not exist!", e)
 
     return HttpResponseRedirect(reverse('feed:profile', args=(u.id,)))
+
+def add_image(request, user_id):
+    u = get_object_or_404(User, pk=user_id)
+    c = Collection.objects.get(pk=1)
+    title = request.POST['title']
+    alt = request.POST['alt']
+
+    # my gut wants to use ImageField but FileField with request.FILES
+    # is the only way I could successfully get the user uploaded
+    # image to be used in the `data` field of Image instances
+    form = ModelFormWithImageField(request.POST, request.FILES)
+
+    if form.is_valid():
+        form.save()
+        try:
+            i = Image(collection=c, user=u, title=title, alt=alt, created_at=timezone.now(), votes=0, data=request.FILES['file'])
+            i.save()
+        except:
+            print("Failed to add image")
+    else:
+        form = ModelFormWithImageField()
+    
+    return HttpResponseRedirect(reverse('feed:profile', args=(user_id,)))
+
+def handle_uploaded_file(file):
+    """Write uploaded file to a new file in chunks."""
+    with open(file, 'wb+') as dest:
+        for chunk in file.chunks():
+            dest.write(chunk)
+
+def upload_file(request, user_id):
+    """Handle user uploaded CSV files."""
+    if request.method == 'POST':
+        u = get_object_or_404(User, pk=user_id)
+        c = Collection.objects.get(pk=1)
+        form = ModelFormWithFileField(request.POST, request.FILES)
+        print(request.FILES, " FILES")
+       
+        if form.is_valid():
+            # file is saved
+            form.save()
+
+            df = pandas.read_csv("./media/files/{f}".format(f=request.FILES['file']))
+            imglist = []
+            for item in df.itertuples():
+                imglist.append(
+                    Image(
+                        user=u, 
+                        collection=c, 
+                        title=item[1].strip(), 
+                        src=item[2].strip(), 
+                        alt=item[3].strip(), 
+                        created_at=timezone.now(), 
+                        votes=0, 
+                        data=""
+                    )
+                )
+            # do a massive insert query to Image
+            bulkQuery = Image.objects.bulk_create(imglist)
+            return HttpResponseRedirect(reverse('feed:profile', args=(user_id,)))
+        else:
+            form = ModelFormWithFileField()
+    return render(request, 'feed/base_profile.html', {'form': form})

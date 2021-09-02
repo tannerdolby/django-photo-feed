@@ -2,9 +2,15 @@
 {% load static %}
 {% block title %}{{ image.title }} | Django Photo Feed{% endblock %}
 {% block main %}
-{% with 'feed/images/'|add:image.src as img_src %}
-<img class="detail-img" src="{% static img_src %}" alt="{{ image.alt }}" loading="lazy" width="1024" height="640" />
-{% endwith %}
+{% if image.data.name == "" %}
+<a href="{% url 'feed:detail' image.pk %}">
+    <img class="img-solo" src="{{ image.src }}" alt="{{ image.alt }}" loading="lazy" width="1024" height="640" />
+</a>
+{% else %}
+<a href="{% url 'feed:detail' image.pk %}">
+    <img class="img-solo" src="{{ MEDIA_URL }}{{ image.data.name }}" alt="{{ image.alt }}" loading="lazy" width="1024" height="640" />
+</a>
+{% endif %}
 <div class="detail-wrap">
 <div class="row">
 <h1>{{ image.title }}</h1>

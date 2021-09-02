@@ -8,11 +8,15 @@
 <ul class="image__feed">
     {% for image in latest_image_feed %}
     <li>
-    {% with 'feed/images/'|add:image.src as img_src %}
+        {% if image.data.name == "" %}
         <a href="{% url 'feed:detail' image.pk %}">
-            <img src="{% static img_src %}" alt="{{ image.alt }}" loading="lazy" width="400px" height="400px" />
+            <img src="{{ image.src }}" alt="{{ image.alt }}" loading="lazy" width="400px" height="400px" />
         </a>
-    {% endwith %}
+        {% else %}
+        <a href="{% url 'feed:detail' image.pk %}">
+            <img src="{{ MEDIA_URL }}{{ image.data.name }}" alt="{{ image.alt }}" loading="lazy" width="400px" height="400px" />
+        </a>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>

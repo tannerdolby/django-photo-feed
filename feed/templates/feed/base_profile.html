@@ -16,6 +16,34 @@
 </div>
 {% endblock %}
 {% block main %}
+{% if user.is_superuser %}
+<h2 class="image-operations">Add Images To The Feed</h2>
+
+<h3>Upload an Image from the filesystem</h3>
+<form class="image-form" action="{% url 'feed:add_image' user.id %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    <label for="title">Image Title</label>
+    <input type="text" name="title">
+    <label for="alt">Alt text</label>
+    <input type="text" name="alt">
+    <label for="file">Upload a image (jpeg, png, webp)</label>
+    <input type="file" accept="image/*, .pdf" name="file">
+    <button type="submit">Submit</button>
+</form>
+
+<h3>Upload a CSV file to insert multiple images at once</h3>
+<form class="csv-form" action="{% url 'feed:upload_file' user.id %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    <label for="title">Upload Description (ie adding images to main feed)</label>
+    <input type="text" name="title">
+    <label for="file">Upload file</label>
+    <input type="file" accept=".csv" name="file">
+    <button type="submit">Submit</button>
+</form>
+
+{% endif %}
 <div class="profile-container">
 <h2>Liked Collection - {{ likedNum }} photos</h2>
 {% if likedNum == 0 %}
@@ -23,20 +51,26 @@
 {% endif %}
 {% if user.is_authenticated %}
 <ul class="profile-liked">
-    {% for img in liked %}
+    {% for image in liked %}
     <li>
         <div>
-            {% with 'feed/images/'|add:img.src as img_src %}
-            <img src="{% static img_src %}" alt="{{ img.alt }}" loading="lazy" width="200px" height="200px" />
-            {% endwith %}
-            <p>{{ img.title }}</p>
-            <p>Liked on {{ img.created_at }}</p>
+            {% if image.data.name == "" %}
+            <a href="{% url 'feed:detail' image.pk %}">
+                <img src="{{ image.src }}" alt="{{ image.alt }}" loading="lazy" width="300px" height="300px" />
+            </a>
+            {% else %}
+            <a href="{% url 'feed:detail' image.pk %}">
+                <img src="{{ MEDIA_URL }}{{ image.data.name }}" alt="{{ image.alt }}" loading="lazy" width="300px" height="300px" />
+            </a>
+            {% endif %}
+            <p>{{ image.title }}</p>
+            <p>Liked on {{ image.created_at }}</p>
             <details>
             <summary>Options</summary>
             <form class="remove-form" action="{% url 'feed:unlike' user.id %}" method="post">
                 {% csrf_token %}
                 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-                <input type="text" style="display: none;" name="image" value="{{ img.id }}">
+                <input type="text" style="display: none;" name="image" value="{{ image.id }}">
                 <button class="like-btn" type="submit">Remove</button>
             </form>
             </details>
