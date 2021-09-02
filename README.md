@@ -4,7 +4,7 @@ A simple photography feed application I built to practice using Django. The home
 Users may login or create an account if not registered and may click on images from the main feed to see more details about an image. Users have the option to "like" an image, adding it to their profile's personal liked collection. A running poll of most liked images can be found on the leaderboard page. Admin (superusers) users can access the bundled admin dashboard for performing CRUD operations.
 
 ## Uploading Images
-To upload your own images, make sure your logged into an account with 'superuser' privelages or else the UI won't display in the template. After your logged in, click the 'profile' nav link and scroll down to see two forms: one for adding a single user uploaded (from users filesystem) image, and another for a handling user uploaded CSV files that contains title, src, alt columns for inserting multiple images at a time.
+To upload your own images, make sure your logged into an account with 'superuser' privileges or else the UI won't display in the template as this is currently only an 'admin/superuser' feature. After your logged in, click the 'profile' nav link and scroll down to see two forms: one for adding a single user uploaded (from users filesystem) image, and another for a handling user uploaded CSV files that contains title, src, alt columns for inserting multiple images at a time.
 
 ## Local setup
 1. Get the code on your computer - Fork this repo and clone it
