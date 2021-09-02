@@ -33,7 +33,7 @@ class ModelFormWithFileField(ModelForm):
 class UploadImage(models.Model):
 	title = models.CharField(max_length=255)
 	alt = models.CharField(max_length=255)
-	file = models.FileField(upload_to='images')
+	file = models.ImageField(upload_to='images')
 
 class ModelFormWithImageField(ModelForm):
 	class Meta:

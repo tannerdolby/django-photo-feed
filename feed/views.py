@@ -11,10 +11,12 @@ from .forms import NewUserForm, ModelFormWithFileField, ModelFormWithImageField
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.conf import settings
-import os
-import pandas
+from os import getcwd
+from pandas import read_csv
+from unicodedata import normalize
+from unidecode import unidecode
 
-cwd = os.getcwd()
+cwd = getcwd()
 
 # Setup generic views
 class IndexView(generic.ListView):
@@ -24,8 +26,6 @@ class IndexView(generic.ListView):
     def get_queryset(self):
         """Return images from the 'main_feed' collection."""
         i = Image.objects.filter(collection=self.c.id)
-        #ip = Image.objects.get(title='Test Image')
-        #print(ip.data)
         return i[::-1]
 
 # view the image on its own page in more detail
@@ -190,14 +190,17 @@ def add_image(request, user_id):
     # is the only way I could successfully get the user uploaded
     # image to be used in the `data` field of Image instances
     form = ModelFormWithImageField(request.POST, request.FILES)
+    filename = "{path}{filename}".format(path="images/", filename=request.FILES['file'])
 
     if form.is_valid():
         form.save()
         try:
-            i = Image(collection=c, user=u, title=title, alt=alt, created_at=timezone.now(), votes=0, data=request.FILES['file'])
+            filename = unidecode(filename)
+            i = Image(collection=c, user=u, title=title, alt=alt, src="", created_at=timezone.now(), votes=0, data=filename)
             i.save()
-        except:
-            print("Failed to add image")
+        except FileNotFoundError as e:
+            print("Uploaded filename differs from the image source in template", e)
+
     else:
         form = ModelFormWithImageField()
     
@@ -215,13 +218,12 @@ def upload_file(request, user_id):
         u = get_object_or_404(User, pk=user_id)
         c = Collection.objects.get(pk=1)
         form = ModelFormWithFileField(request.POST, request.FILES)
-        print(request.FILES, " FILES")
        
         if form.is_valid():
             # file is saved
             form.save()
 
-            df = pandas.read_csv("./media/files/{f}".format(f=request.FILES['file']))
+            df = read_csv("./media/files/{f}".format(f=request.FILES['file']))
             imglist = []
             for item in df.itertuples():
                 imglist.append(
