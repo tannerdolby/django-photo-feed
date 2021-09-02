@@ -186,9 +186,6 @@ def add_image(request, user_id):
     title = request.POST['title']
     alt = request.POST['alt']
 
-    # my gut wants to use ImageField but FileField with request.FILES
-    # is the only way I could successfully get the user uploaded
-    # image to be used in the `data` field of Image instances
     form = ModelFormWithImageField(request.POST, request.FILES)
     filename = "{path}{filename}".format(path="images/", filename=request.FILES['file'])
 
