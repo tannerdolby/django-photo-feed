@@ -27,7 +27,7 @@ class UploadFile(models.Model):
 class ModelFormWithFileField(ModelForm):
 	class Meta:
 		model = UploadFile
-		fields = "__all__"
+		fields = ['title', 'file']
 
 # Uploading Images Form
 class UploadImage(models.Model):
@@ -38,4 +38,4 @@ class UploadImage(models.Model):
 class ModelFormWithImageField(ModelForm):
 	class Meta:
 		model = UploadImage
-		fields = "__all__"
+		fields = ['title', 'alt', 'file']
