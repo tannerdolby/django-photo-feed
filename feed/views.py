@@ -11,7 +11,7 @@ from .forms import NewUserForm, ModelFormWithFileField, ModelFormWithImageField
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.conf import settings
-from os import getcwd
+from os import getcwd, path
 from pandas import read_csv
 from unicodedata import normalize
 from unidecode import unidecode
@@ -187,25 +187,41 @@ def add_image(request, user_id):
     alt = request.POST['alt']
 
     form = ModelFormWithImageField(request.POST, request.FILES)
-    filename = "{path}{filename}".format(path="images/", filename=request.FILES['file'])
+    path = "{path}{filename}".format(path="images/", filename=request.FILES['file'])
+    filelist = request.FILES.getlist('file')
 
     if form.is_valid():
-        form.save()
-        try:
-            filename = unidecode(filename)
-            i = Image(collection=c, user=u, title=title, alt=alt, src="", created_at=timezone.now(), votes=0, data=filename)
-            i.save()
-        except FileNotFoundError as e:
-            print("Uploaded filename differs from the image source in template", e)
-
+        if (len(filelist) == 1):
+            form.save()
+            try:
+                path = unidecode(path)
+                i = Image(collection=c, user=u, title=title, alt=alt, src="", created_at=timezone.now(), votes=0, data=path)
+                i.save()
+            except FileNotFoundError as e:
+                print("Uploaded filename differs from the image source in template", e)
+        else:
+            for f in filelist:
+                path = "{path}{filename}".format(path="images/", filename=f.name)
+                fr = ModelFormWithImageField(request.POST, request.FILES)
+                if fr.is_valid():
+                    try:
+                        obj = fr.save(commit=False)
+                        obj.file = f
+                        obj.save()
+                        path = unidecode(path)
+                        i = Image(collection=c, user=u, title=title, alt=alt, src="", created_at=timezone.now(), votes=0, data=path)
+                        i.save()
+                    except FileNotFoundError as e:
+                        print("Uploaded filename differs from the image source in template", e)
     else:
         form = ModelFormWithImageField()
     
     return HttpResponseRedirect(reverse('feed:profile', args=(user_id,)))
 
+# Not needed as I'm using Models for ImageField and FileField uploads
 def handle_uploaded_file(file):
     """Write uploaded file to a new file in chunks."""
-    with open(file, 'wb+') as dest:
+    with open("media/sample.txt", 'wb+') as dest:
         for chunk in file.chunks():
             dest.write(chunk)
 
@@ -220,15 +236,24 @@ def upload_file(request, user_id):
             # file is saved
             form.save()
 
+            # Todo - Handle duplicate file uploads which get 
+            # hashed by django like somefile_D7hvhsj.png, turns out its harder
+            # than it looks to get that UploadFile object instance with hashed name
+            # maybe just overwrite existing files for now?
+            #print('/media/files/{}'.format(request.FILES['file'].name))
+            #print(path.isfile('/media/files/{}'.format(request.FILES['file'].name)), "HELLO")
+            #handle_uploaded_file(request.FILES['file'])
+
             df = read_csv("./media/files/{f}".format(f=request.FILES['file']))
             imglist = []
             for item in df.itertuples():
+                #path = "{path}{file}".format(path="images/", file=item[2].strip())
                 imglist.append(
                     Image(
                         user=u, 
                         collection=c, 
-                        title=item[1].strip(), 
-                        src=item[2].strip(), 
+                        title=item[1].strip(),
+                        src=item[2].strip(),
                         alt=item[3].strip(), 
                         created_at=timezone.now(), 
                         votes=0, 
