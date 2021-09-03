@@ -240,9 +240,6 @@ def upload_file(request, user_id):
             # hashed by django like somefile_D7hvhsj.png, turns out its harder
             # than it looks to get that UploadFile object instance with hashed name
             # maybe just overwrite existing files for now?
-            #print('/media/files/{}'.format(request.FILES['file'].name))
-            #print(path.isfile('/media/files/{}'.format(request.FILES['file'].name)), "HELLO")
-            #handle_uploaded_file(request.FILES['file'])
 
             df = read_csv("./media/files/{f}".format(f=request.FILES['file']))
             imglist = []
